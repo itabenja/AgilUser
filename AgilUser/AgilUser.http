@@ -1,0 +1,6 @@
+@AgilUser_HostAddress = http://localhost:5191
+
+GET {{AgilUser_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
