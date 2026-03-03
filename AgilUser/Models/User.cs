@@ -9,10 +9,9 @@ public class User
 
     public string Email { get; set; } = string.Empty;
 
-    // Demo: gem hashed password (ikke plaintext)
+    // Hashed password
     public string PasswordHash { get; set; } = string.Empty;
 
-    // Valgfri: hvis I vil vise ekstra data senere
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
 
@@ -20,28 +19,30 @@ public class User
 }
 
 // =========================
-// Request DTOs (Controller input)
+// Request DTOs (INPUT)
 // =========================
 public class RegisterRequest
 {
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
 
-    // Valgfri felter
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
-}}
+}
 
 public class LoginRequest
-    // Returnér fx userId ved register/login success
-    public Guid? UserId { get; set; }
 {
     public string Email { get; set; } = string.Empty;
-    public bool Success { get; set; }
-    public string Message { get; set; } = string.Empty;
-
     public string Password { get; set; } = string.Empty;
 }
 
 // =========================
-// Response DTO (Controller output)
+// Response DTO (OUTPUT)
+// =========================
+public class AuthResponse
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+
+    public Guid? UserId { get; set; }
+}
