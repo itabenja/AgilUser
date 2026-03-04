@@ -73,24 +73,35 @@ public class UsersLoginController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         // Basic validation
+        // Test 11 - null dto
         if (request is null)
             return BadRequest(new AuthResponse { Success = false, Message = "Request body is required." });
 
+        // test 14 - Invalid modelstate
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        // test 12 - empty username 
         if (string.IsNullOrWhiteSpace(request.Email))
             return BadRequest(new AuthResponse { Success = false, Message = "Email is required." });
 
+        // test 13 - empty password 
         if (string.IsNullOrWhiteSpace(request.Password))
             return BadRequest(new AuthResponse { Success = false, Message = "Password is required." });
 
-        // Service call (verify user + verify hashed password sker i service)
-        var result = await _authService.LoginAsync(request);
-
-        if (!result.Success)
+        // test 15 - exception handling 
+        try
         {
-            // 401 Unauthorized ved forkert login
-            return Unauthorized(result);
-        }
+            var result = await _authService.LoginAsync(request);
 
-        return Ok(result);
+            if (!result.Success)
+                return Unauthorized(result); // Test 10
+
+            return Ok(result); // Test 08
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new AuthResponse { Success = false, Message = "An unexpected error occurred." });
+        }
     }
 }
