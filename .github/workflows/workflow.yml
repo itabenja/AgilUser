@@ -1,0 +1,29 @@
+name: Build and Test AgilUser
+
+on:
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore AgilUser.sln
+
+      - name: Build project
+        run: dotnet build AgilUser.sln --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test AgilUser.sln --configuration Release --no-build
