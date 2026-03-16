@@ -1,4 +1,5 @@
 using UsersApi.Models;
+using UsersApi.Repositories;
 
 namespace UsersApi.Services;
 
