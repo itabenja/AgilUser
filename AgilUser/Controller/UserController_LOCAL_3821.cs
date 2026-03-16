@@ -1,9 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using UsersApi.Models;
-using UsersApi.Services;
+using UsersApi.Services; // hvor IAuthService ligger
 
 namespace UsersApi.Controllers;
 
+// =========================
+// 1) Register Controller
+// POST /users/register
+// =========================
 [ApiController]
 [Route("users")]
 public class UsersRegisterController : ControllerBase
@@ -18,30 +22,31 @@ public class UsersRegisterController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        try
+        // Basic validation (controller-level)
+        if (request is null)
+            return BadRequest(new AuthResponse { Success = false, Message = "Request body is required." });
+
+        if (string.IsNullOrWhiteSpace(request.Email))
+            return BadRequest(new AuthResponse { Success = false, Message = "Email is required." });
+
+        if (string.IsNullOrWhiteSpace(request.Password))
+            return BadRequest(new AuthResponse { Success = false, Message = "Password is required." });
+
+        // Service call (unique email + hashing sker i service)
+        var result = await _authService.RegisterAsync(request);
+
+        if (!result.Success)
         {
-            // Validation (controller-level)
-            if (request is null)
-                return BadRequest(new AuthResponse { Success = false, Message = "Request body is required." });
-
-            if (string.IsNullOrWhiteSpace(request.Email))
-                return BadRequest(new AuthResponse { Success = false, Message = "Email is required." });
-
-            if (string.IsNullOrWhiteSpace(request.Password))
-                return BadRequest(new AuthResponse { Success = false, Message = "Password is required." });
-
-            var result = await _authService.RegisterAsync(request);
-
-            if (!result.Success)
+            // typisk: email allerede brugt eller input invalid
+            // 409 Conflict giver god mening for duplicate email
+            if (result.Message.Contains("already", StringComparison.OrdinalIgnoreCase) ||
+                result.Message.Contains("unique", StringComparison.OrdinalIgnoreCase))
             {
-                // Duplicate email => 400 (matcher din testcase "BadRequest")
-                // (jeg bruger 400 her, selvom 409 også er fint)
-                return BadRequest(result);
+                return Conflict(result);
             }
 
-            return Ok(result); // matcher din Test 1 (200 OK)
+            return BadRequest(result);
         }
-<<<<<<< HEAD
 
         // 201 Created (vi har oprettet en ny user)
         // Vi har også GET /users/{id} i sprint 2, så vi kan returnere Location
@@ -97,11 +102,6 @@ public class UsersLoginController : ControllerBase
         catch (Exception)
         {
             return StatusCode(500, new AuthResponse { Success = false, Message = "An unexpected error occurred." });
-=======
-        catch
-        {
-            return StatusCode(500, new AuthResponse { Success = false, Message = "Internal server error." });
->>>>>>> feature/OpretProfilControllerTest
         }
     }
 }
