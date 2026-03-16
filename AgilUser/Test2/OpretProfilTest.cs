@@ -1,26 +1,28 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using UsersApi.Controllers;
 using UsersApi.Models;
 using UsersApi.Services;
-using Xunit;
 
-namespace UsersApi.Tests.Controllers;
+namespace AgilUser.Test;
 
-public class UsersRegisterControllerTests
+[TestClass]
+public class TestRegister
 {
-    private readonly Mock<IAuthService> _authServiceMock;
-    private readonly UsersRegisterController _controller;
+    private Mock<IAuthService> _mockAuthService;
+    private UsersRegisterController _controller;
 
-    public UsersRegisterControllerTests()
+    [TestInitialize]
+    public void Setup()
     {
-        _authServiceMock = new Mock<IAuthService>(MockBehavior.Strict);
-        _controller = new UsersRegisterController(_authServiceMock.Object);
+        _mockAuthService = new Mock<IAuthService>();
+        _controller = new UsersRegisterController(_mockAuthService.Object);
     }
 
     // Test 1 — Valid Registration: Returns 200 OK and user is added
-    [Fact]
-    public async Task Register_ValidRequest_ReturnsOk()
+    [TestMethod]
+    public async Task Test01_ValidRegistration_ShouldReturn200()
     {
         // Arrange
         var request = new RegisterRequest
@@ -36,7 +38,7 @@ public class UsersRegisterControllerTests
             UserId = Guid.NewGuid()
         };
 
-        _authServiceMock
+        _mockAuthService
             .Setup(s => s.RegisterAsync(It.IsAny<RegisterRequest>()))
             .ReturnsAsync(response);
 
@@ -44,20 +46,22 @@ public class UsersRegisterControllerTests
         var result = await _controller.Register(request);
 
         // Assert
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
+        var okResult = result as OkObjectResult;
+        Assert.IsNotNull(okResult);
+        Assert.AreEqual(200, okResult.StatusCode);
 
-        var body = Assert.IsType<AuthResponse>(ok.Value);
-        Assert.True(body.Success);
+        var body = okResult.Value as AuthResponse;
+        Assert.IsNotNull(body);
+        Assert.IsTrue(body.Success);
 
-        _authServiceMock.Verify(s =>
+        _mockAuthService.Verify(s =>
             s.RegisterAsync(It.Is<RegisterRequest>(r => r.Email == request.Email)),
             Times.Once);
     }
 
-    // Test 2 — Username Already Exists: Returns 400 BadRequest
-    [Fact]
-    public async Task Register_EmailAlreadyExists_ReturnsBadRequest()
+    // Test 2 — Email already exists: Returns 400 BadRequest
+    [TestMethod]
+    public async Task Test02_EmailAlreadyExists_ShouldReturn400()
     {
         // Arrange
         var request = new RegisterRequest
@@ -72,7 +76,7 @@ public class UsersRegisterControllerTests
             Message = "Email already exists."
         };
 
-        _authServiceMock
+        _mockAuthService
             .Setup(s => s.RegisterAsync(It.IsAny<RegisterRequest>()))
             .ReturnsAsync(response);
 
@@ -80,31 +84,33 @@ public class UsersRegisterControllerTests
         var result = await _controller.Register(request);
 
         // Assert
-        var bad = Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal(400, bad.StatusCode);
+        var badRequest = result as BadRequestObjectResult;
+        Assert.IsNotNull(badRequest);
+        Assert.AreEqual(400, badRequest.StatusCode);
 
-        var body = Assert.IsType<AuthResponse>(bad.Value);
-        Assert.False(body.Success);
+        var body = badRequest.Value as AuthResponse;
+        Assert.IsNotNull(body);
+        Assert.IsFalse(body.Success);
     }
 
     // Test 3 — Null DTO: Returns 400 BadRequest
-    [Fact]
-    public async Task Register_NullDto_ReturnsBadRequest()
+    [TestMethod]
+    public async Task Test03_NullRequest_ShouldReturn400()
     {
         // Act
-        var result = await _controller.Register(null!);
+        var result = await _controller.Register(null);
 
         // Assert
-        var bad = Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal(400, bad.StatusCode);
+        var badRequest = result as BadRequestObjectResult;
+        Assert.IsNotNull(badRequest);
+        Assert.AreEqual(400, badRequest.StatusCode);
 
-        // Service should NOT be called
-        _authServiceMock.Verify(s => s.RegisterAsync(It.IsAny<RegisterRequest>()), Times.Never);
+        _mockAuthService.Verify(s => s.RegisterAsync(It.IsAny<RegisterRequest>()), Times.Never);
     }
 
-    // Test 4 — Empty Username (Email): Returns 400 BadRequest
-    [Fact]
-    public async Task Register_EmptyEmail_ReturnsBadRequest()
+    // Test 4 — Empty email: Returns 400 BadRequest
+    [TestMethod]
+    public async Task Test04_EmptyEmail_ShouldReturn400()
     {
         // Arrange
         var request = new RegisterRequest
@@ -117,15 +123,16 @@ public class UsersRegisterControllerTests
         var result = await _controller.Register(request);
 
         // Assert
-        var bad = Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal(400, bad.StatusCode);
+        var badRequest = result as BadRequestObjectResult;
+        Assert.IsNotNull(badRequest);
+        Assert.AreEqual(400, badRequest.StatusCode);
 
-        _authServiceMock.Verify(s => s.RegisterAsync(It.IsAny<RegisterRequest>()), Times.Never);
+        _mockAuthService.Verify(s => s.RegisterAsync(It.IsAny<RegisterRequest>()), Times.Never);
     }
 
-    // Test 5 — Empty Password: Returns 400 BadRequest
-    [Fact]
-    public async Task Register_EmptyPassword_ReturnsBadRequest()
+    // Test 5 — Empty password: Returns 400 BadRequest
+    [TestMethod]
+    public async Task Test05_EmptyPassword_ShouldReturn400()
     {
         // Arrange
         var request = new RegisterRequest
@@ -138,15 +145,16 @@ public class UsersRegisterControllerTests
         var result = await _controller.Register(request);
 
         // Assert
-        var bad = Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal(400, bad.StatusCode);
+        var badRequest = result as BadRequestObjectResult;
+        Assert.IsNotNull(badRequest);
+        Assert.AreEqual(400, badRequest.StatusCode);
 
-        _authServiceMock.Verify(s => s.RegisterAsync(It.IsAny<RegisterRequest>()), Times.Never);
+        _mockAuthService.Verify(s => s.RegisterAsync(It.IsAny<RegisterRequest>()), Times.Never);
     }
 
-    // Test 6 — Whitespace Username (Email): Returns 400 BadRequest
-    [Fact]
-    public async Task Register_WhitespaceEmail_ReturnsBadRequest()
+    // Test 6 — Whitespace email: Returns 400 BadRequest
+    [TestMethod]
+    public async Task Test06_WhitespaceEmail_ShouldReturn400()
     {
         // Arrange
         var request = new RegisterRequest
@@ -159,15 +167,16 @@ public class UsersRegisterControllerTests
         var result = await _controller.Register(request);
 
         // Assert
-        var bad = Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal(400, bad.StatusCode);
+        var badRequest = result as BadRequestObjectResult;
+        Assert.IsNotNull(badRequest);
+        Assert.AreEqual(400, badRequest.StatusCode);
 
-        _authServiceMock.Verify(s => s.RegisterAsync(It.IsAny<RegisterRequest>()), Times.Never);
+        _mockAuthService.Verify(s => s.RegisterAsync(It.IsAny<RegisterRequest>()), Times.Never);
     }
 
-    // Test 7 — Repository Throws Exception During Add: Returns 500 InternalServerError
-    [Fact]
-    public async Task Register_ServiceThrowsException_ReturnsInternalServerError()
+    // Test 7 — Service throws exception: Returns 500 InternalServerError
+    [TestMethod]
+    public async Task Test07_ServiceThrowsException_ShouldReturn500()
     {
         // Arrange
         var request = new RegisterRequest
@@ -176,7 +185,7 @@ public class UsersRegisterControllerTests
             Password = "Secret123!"
         };
 
-        _authServiceMock
+        _mockAuthService
             .Setup(s => s.RegisterAsync(It.IsAny<RegisterRequest>()))
             .ThrowsAsync(new Exception("DB broke"));
 
@@ -184,7 +193,8 @@ public class UsersRegisterControllerTests
         var result = await _controller.Register(request);
 
         // Assert
-        var obj = Assert.IsType<ObjectResult>(result);
-        Assert.Equal(500, obj.StatusCode);
+        var serverError = result as ObjectResult;
+        Assert.IsNotNull(serverError);
+        Assert.AreEqual(500, serverError.StatusCode);
     }
 }

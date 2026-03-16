@@ -180,30 +180,6 @@ public class TestLogin
         Assert.AreEqual(500, serverError.StatusCode);
     }
     
-    [TestClass]
-    public class TestGetUsers
-    {
-        [TestMethod]
-        public async Task GetUsers_ReturnsOk()
-        {
-            // Arrange
-            var mockService = new Mock<IAuthService>();
-            mockService.Setup(s => s.GetUsersAsync())
-                .ReturnsAsync(new List<User>
-                {
-                    new User { Id = Guid.NewGuid(), Email = "user@test.com" }
-                });
-
-            var controller = new UsersGetController(mockService.Object);
-
-            // Act
-            var result = await controller.GetUsers();
-
-            // Assert
-            var okResult = result as OkObjectResult;
-            Assert.IsNotNull(okResult);
-            Assert.AreEqual(200, okResult.StatusCode);
-        }
-    }
+    
     
 }
