@@ -49,6 +49,9 @@ public class UsersRegisterController : ControllerBase
     }
 }
 
+
+
+
 // =========================
 // 2) Login Controller
 // POST /users/login
@@ -103,5 +106,31 @@ public class UsersLoginController : ControllerBase
             return StatusCode(500, new AuthResponse { Success = false, Message = "Internal server error." });
 >>>>>>> feature/OpretProfilControllerTest
         }
+    }
+}
+
+
+// get-users 
+
+[ApiController]
+[Route("users")]
+public class UsersGetController : ControllerBase
+{
+    private readonly IAuthService _userService;
+
+    public UsersGetController(IAuthService userService)
+    {
+        _userService = userService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetUsers()
+    {
+        var users = await _userService.GetUsersAsync();
+
+        if (users == null || !users.Any())
+            return NotFound();
+
+        return Ok(users);
     }
 }

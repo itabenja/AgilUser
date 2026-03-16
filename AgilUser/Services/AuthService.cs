@@ -87,4 +87,9 @@ public class AuthService : IAuthService
             UserId = user.Id
         };
     }
+    
+    public async Task<List<User>> GetUsersAsync()
+    {
+        return await _userRepository.GetAllAsync();
+    }
 }
