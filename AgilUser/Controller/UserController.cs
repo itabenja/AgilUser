@@ -33,29 +33,21 @@ public class UsersRegisterController : ControllerBase
             var result = await _authService.RegisterAsync(request);
 
             if (!result.Success)
-            {
-                // Duplicate email => 400 (matcher din testcase "BadRequest")
-                // (jeg bruger 400 her, selvom 409 også er fint)
                 return BadRequest(result);
-            }
 
-            return Ok(result); // matcher din Test 1 (200 OK)
+            return Ok(result);
         }
-<<<<<<< HEAD
-
-        // 201 Created (vi har oprettet en ny user)
-        // Vi har også GET /users/{id} i sprint 2, så vi kan returnere Location
-        return Created($"/users/{result.UserId}", result);
+        catch
+        {
+            return StatusCode(500, new AuthResponse
+            {
+                Success = false,
+                Message = "Internal server error."
+            });
+        }
     }
 }
 
-
-
-
-// =========================
-// 2) Login Controller
-// POST /users/login
-// =========================
 [ApiController]
 [Route("users")]
 public class UsersLoginController : ControllerBase
@@ -70,67 +62,34 @@ public class UsersLoginController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        // Basic validation
-        // Test 11 - null dto
         if (request is null)
             return BadRequest(new AuthResponse { Success = false, Message = "Request body is required." });
 
-        // test 14 - Invalid modelstate
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // test 12 - empty username 
         if (string.IsNullOrWhiteSpace(request.Email))
             return BadRequest(new AuthResponse { Success = false, Message = "Email is required." });
 
-        // test 13 - empty password 
         if (string.IsNullOrWhiteSpace(request.Password))
             return BadRequest(new AuthResponse { Success = false, Message = "Password is required." });
 
-        // test 15 - exception handling 
         try
         {
             var result = await _authService.LoginAsync(request);
 
             if (!result.Success)
-                return Unauthorized(result); // Test 10
+                return Unauthorized(result);
 
-            return Ok(result); // Test 08
+            return Ok(result);
         }
-        catch (Exception)
-        {
-            return StatusCode(500, new AuthResponse { Success = false, Message = "An unexpected error occurred." });
-=======
         catch
         {
-            return StatusCode(500, new AuthResponse { Success = false, Message = "Internal server error." });
->>>>>>> feature/OpretProfilControllerTest
+            return StatusCode(500, new AuthResponse
+            {
+                Success = false,
+                Message = "An unexpected error occurred."
+            });
         }
-    }
-}
-
-
-// get-users 
-
-[ApiController]
-[Route("users")]
-public class UsersGetController : ControllerBase
-{
-    private readonly IAuthService _userService;
-
-    public UsersGetController(IAuthService userService)
-    {
-        _userService = userService;
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetUsers()
-    {
-        var users = await _userService.GetUsersAsync();
-
-        if (users == null || !users.Any())
-            return NotFound();
-
-        return Ok(users);
     }
 }
